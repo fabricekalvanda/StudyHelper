@@ -1,10 +1,28 @@
 package com.zybooks.studyhelper;
 
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.PrimaryKey;
+
+import static androidx.room.ForeignKey.CASCADE;
+
+@Entity(foreignKeys = @ForeignKey(entity = Subject.class, parentColumns = "id",
+        childColumns = "subject_id", onDelete = CASCADE))
 public class Question {
 
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     private long mId;
+
+    @ColumnInfo(name = "text")
     private String mText;
+
+    @ColumnInfo(name = "answer")
     private String mAnswer;
+
+    @ColumnInfo(name = "subject_id")
     private long mSubjectId;
 
     public void setId(long id) {

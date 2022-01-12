@@ -30,7 +30,7 @@ public class SubjectActivity extends AppCompatActivity
         setContentView(R.layout.activity_subject);
 
         // Singleton
-        mStudyDb = StudyDatabase.getInstance();
+        mStudyDb = StudyDatabase.getInstance(getApplicationContext());
 
         mSubjectColors = getResources().getIntArray(R.array.subjectColors);
 
@@ -49,7 +49,8 @@ public class SubjectActivity extends AppCompatActivity
     public void onSubjectEntered(String subjectText) {
         if (subjectText.length() > 0) {
             Subject subject = new Subject(subjectText);
-            mStudyDb.addSubject(subject);
+            long subjectId = mStudyDb.subjectDao().insertSubject(subject);
+            subject.setId(subjectId);
 
             // TODO: add subject to RecyclerView
             Toast.makeText(this, "Added " + subjectText, Toast.LENGTH_SHORT).show();
@@ -63,7 +64,7 @@ public class SubjectActivity extends AppCompatActivity
     }
 
     private List<Subject> loadSubjects() {
-        return mStudyDb.getSubjects(StudyDatabase.SubjectSortOrder.UPDATE_DESC);
+        return mStudyDb.subjectDao().getSubjectsNewerFirst();
     }
 
     private class SubjectHolder extends RecyclerView.ViewHolder

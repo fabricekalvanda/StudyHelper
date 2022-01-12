@@ -1,9 +1,22 @@
 package com.zybooks.studyhelper;
 
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+@Entity
 public class Subject {
 
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     private long mId;
+
+    @NonNull
+    @ColumnInfo(name = "text")
     private String mText;
+
+    @ColumnInfo(name = "updated")
     private long mUpdateTime;
 
     public Subject(String text) {

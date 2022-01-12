@@ -1,92 +1,66 @@
 package com.zybooks.studyhelper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import android.content.Context;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
-public class StudyDatabase {
+@Database(entities = {Question.class, Subject.class}, version = 1)
+public abstract class StudyDatabase extends RoomDatabase {
 
-    private static StudyDatabase mStudyDb;
-    private List<Subject> mSubjects;
-    private HashMap<Long, List<Question>> mQuestions;
+    private static final String DATABASE_NAME = "study.db";
 
-    public enum SubjectSortOrder { ALPHABETIC, UPDATE_DESC, UPDATE_ASC };
+    private static StudyDatabase mStudyDatabase;
 
-    public static StudyDatabase getInstance() {
-        if (mStudyDb == null) {
-            mStudyDb = new StudyDatabase();
-        }
-        return mStudyDb;
-    }
-
-    // Prevent instantiating from outside the class
-    private StudyDatabase() {
-        mSubjects = new ArrayList<>();
-        mQuestions = new HashMap<>();
-
-        // Add a few subjects and questions
-        Subject subject = new Subject("Math");
-        subject.setId(1);
-        addSubject(subject);
-
-        Question question = new Question();
-        question.setId(1);
-        question.setText("What is 2 + 3?");
-        question.setAnswer("2 + 3 = 5");
-        question.setSubjectId(1);
-        addQuestion(question);
-
-        question = new Question();
-        question.setId(2);
-        question.setText("What is pi?");
-        question.setAnswer("Pi is the ratio of a circle's circumference to its diameter.");
-        question.setSubjectId(1);
-        addQuestion(question);
-
-        subject = new Subject("History");
-        subject.setId(2);
-        addSubject(subject);
-
-        question = new Question();
-        question.setId(3);
-        question.setText("On what date was the U.S. Declaration of Independence adopted?");
-        question.setAnswer("July 4, 1776.");
-        question.setSubjectId(2);
-        addQuestion(question);
-
-        subject = new Subject("Computing");
-        subject.setId(3);
-        addSubject(subject);
-    }
-
-    public void addSubject(Subject subject) {
-        mSubjects.add(subject);
-        List<Question> questionList = new ArrayList<>();
-        mQuestions.put(subject.getId(), questionList);
-    }
-
-    public Subject getSubject(long subjectId) {
-        for (Subject subject: mSubjects) {
-            if (subject.getId() == subjectId) {
-                return subject;
-            }
+    // Singleton
+    public static StudyDatabase getInstance(Context context) {
+        if (mStudyDatabase == null) {
+            mStudyDatabase = Room.databaseBuilder(context, StudyDatabase.class, DATABASE_NAME)
+                    .allowMainThreadQueries()
+                    .build();
+            mStudyDatabase.addStarterData();
         }
 
-        return null;
+        return mStudyDatabase;
     }
 
-    public List<Subject> getSubjects(SubjectSortOrder order) {
-        return mSubjects;
-    }
+    public abstract QuestionDao questionDao();
+    public abstract SubjectDao subjectDao();
 
-    public void addQuestion(Question question) {
-        List<Question> questionList = mQuestions.get(question.getSubjectId());
-        if (questionList != null) {
-            questionList.add(question);
+    private void addStarterData() {
+
+        // Add a few subjects and questions if database is empty
+        if (subjectDao().getSubjects().size() == 0) {
+
+            // Execute code on a background thread
+            runInTransaction(() -> {
+                Subject subject = new Subject("Math");
+                long subjectId = subjectDao().insertSubject(subject);
+
+                Question question = new Question();
+                question.setText("What is 2 + 3?");
+                question.setAnswer("2 + 3 = 5");
+                question.setSubjectId(subjectId);
+                questionDao().insertQuestion(question);
+
+                question = new Question();
+                question.setText("What is pi?");
+                question.setAnswer("Pi is the ratio of a circle's circumference to its diameter.");
+                question.setSubjectId(subjectId);
+                questionDao().insertQuestion(question);
+
+                subject = new Subject("History");
+                subjectId = subjectDao().insertSubject(subject);
+
+                question = new Question();
+                question.setText("On what date was the U.S. Declaration of Independence adopted?");
+                question.setAnswer("July 4, 1776.");
+                question.setSubjectId(subjectId);
+                questionDao().insertQuestion(question);
+
+                subject = new Subject("Computing");
+                subjectId = subjectDao().insertSubject(subject);
+            });
         }
-    }
-
-    public List<Question> getQuestions(long subjectId) {
-        return mQuestions.get(subjectId);
     }
 }
